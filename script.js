@@ -7,39 +7,43 @@ const enableBtn = document.getElementById("webcamButton");
 const drawUtils = new imports.DrawingUtils(ctx);
 
 let handLandmarker;
-let lastVideoTime = -1;
+
 async function loadModel() {
-  const vision = await imports.FilesetResolver.forVisionTasks(
-    "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm"
-  );
-  handLandmarker = await imports.HandLandmarker.createFromOptions(
-    vision,
-    {
-      baseOptions: {
-        modelAssetPath: "hand_landmarker.task"
-      },
-      runningMode: "VIDEO",
-      numHands: 2
-    });
+  try {
+    const vision = await imports.FilesetResolver.forVisionTasks(
+      "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm"
+    );
+    handLandmarker = await imports.HandLandmarker.createFromOptions(
+      vision,
+      {
+        baseOptions: {
+          modelAssetPath: "hand_landmarker.task",
+          delegate: "GPU"
+        },
+        runningMode: "VIDEO",
+        numHands: 2
+      });
     enableBtn.disabled = false;
+  } catch (error) {
+    console.log("Error loading the model: ", error);
+  }
 }
 enableBtn.addEventListener("click", async () => {
   const stream = await navigator.mediaDevices.getUserMedia({ video: { width: 640, height: 480 } });
   video.srcObject = stream;
-  video.addEventListener("loadeddata", predictLoop)
+  enableBtn.disabled = true;
 })
-
+video.addEventListener("play", predictLoop);
 function predictLoop() {
-  if (video.currentTime !== lastVideoTime) {
-    lastVideoTime = video.currentTime;
-    const detections = handLandmarker.detectForVideo(video, performance.now());
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    if (detections.landmarks.length > 0) {
-      for (const landmarks of detections.landmarks) {
-        drawUtils.drawLandmarks(landmarks, { color: "blue", radius: 5 });
-        drawUtils.drawConnectors(landmarks, imports.HandLandmarker.HAND_CONNECTIONS, { color: "green", lineWidth: 2 });
-      }
+  const detections = handLandmarker.detectForVideo(video, performance.now());
+  console.log(detections)
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  if (detections.landmarks) {
+    for (const landmarks of detections.landmarks) {
+      drawUtils.drawLandmarks(landmarks, { color: "blue", radius: 5 });
+      drawUtils.drawConnectors(landmarks, imports.HandLandmarker.HAND_CONNECTIONS, { color: "green", lineWidth: 2 });
     }
+
   }
   requestAnimationFrame(predictLoop)
 }
