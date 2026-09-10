@@ -1,16 +1,41 @@
+<!DOCTYPE html>
 <html>
+
 <head>
-  <title>Hand Landmarker</title>
+  <meta charset="UTF-8">
+  <title>Hand Recognition Quiz</title>
   <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
-  <button id="webcamButton">Enable Webcam</button><br><br>
-  <div class="container">
-    <video id="webcam" autoplay playsinline width="640" height="480"></video>
-    <canvas id="output_canvas" width="640" height="480"></canvas>
+  <div class="main-container" id="main-container">
+    <button id="webcamButton">Start the Quiz</button>
+
+    <div id="question-answer">
+      <div class="timer-container">
+        <span>Time Left: </span><span id="timer">5</span>s
+      </div>
+      <h2 id="question"></h2>
+      <div id="answer">
+        <p id="answer1"></p>
+        <p id="answer2"></p>
+        <p id="answer3"></p>
+        <p id="answer4"></p>
+      </div>
+    </div>
+
+    <div class="container">
+      <video id="webcam" autoplay playsinline width="640" height="480"></video>
+      <canvas id="output_canvas" width="640" height="480"></canvas>
+    </div>
   </div>
+  <div id="end-container" style="display: none;">
+    <h2>Quiz Completed!</h2>
+    <p id="score"></p>
+    <button id="restartButton">Back to Home</button>
+  </div>
+
+  <script src="script.js" type="module"></script>
 </body>
-<script src="script.js" type="module"></script>
 
 </html>
