@@ -3,6 +3,8 @@ import data from "./data.json";
 
 const mainContainer = document.getElementById("main-container");
 const endContainer = document.getElementById("end-container");
+const questionContainer = document.getElementById("questions-video");
+const homeContainer = document.getElementById("home-container");
 const question = document.getElementById("question");
 const answer1 = document.getElementById("answer1");
 const answer2 = document.getElementById("answer2");
@@ -21,6 +23,8 @@ const drawUtils = new imports.DrawingUtils(ctx);
 let index = 0;
 let timeLeft = 5;
 let timerInterval = null;
+let fingerCount = 0;
+let correctCount = 0;
 let handLandmarker;
 
 async function loadModel() {
@@ -45,6 +49,8 @@ async function loadModel() {
 }
 enableBtn.addEventListener("click", async () => {
   try {
+    homeContainer.style.display = "none";
+    questionContainer.style.display = "block";
     const stream = await navigator.mediaDevices.getUserMedia({ video: { width: 640, height: 480 } });
     video.srcObject = stream;
     enableBtn.disabled = true;
@@ -60,16 +66,33 @@ function predictLoop() {
     const detections = handLandmarker.detectForVideo(video, performance.now());
     console.log(detections)
     ctx.clearRect(0, 0, canvas.width, canvas.height);
+    let frameFilter = 0;
     if (detections.landmarks && detections.landmarks.length > 0) {
       for (const landmarks of detections.landmarks) {
+        frameFilter += upFingers(landmarks);
         drawUtils.drawLandmarks(landmarks, { color: "blue", radius: 5 });
         drawUtils.drawConnectors(landmarks, imports.HandLandmarker.HAND_CONNECTIONS, { color: "green", lineWidth: 2 });
       }
     }
+    fingerCount = frameFilter;
   }
   requestAnimationFrame(predictLoop);
 }
-
+function upFingers(landmarks) {
+  const fingers = [
+    { tip: 8, mid: 6 },
+    { tip: 12, mid: 10 },
+    { tip: 16, mid: 14 },
+    { tip: 20, mid: 18 }
+  ]
+  let count = 0;
+  for (const finger of fingers) {
+    if (landmarks[finger.tip].y < landmarks[finger.mid].y) {
+      count ++;
+    }
+  }
+  return count;
+}
 function startQuizTimer() {
   showQuestion(index);
   if (timer) {
@@ -81,6 +104,10 @@ function startQuizTimer() {
   timerInterval = setInterval(() => {
     timeLeft--;
     if (timeLeft < 0) {
+      if (String(fingerCount) === String(data[index].correct)) {
+        correctCount++;
+      }
+      fingerCount = 0;
       index++;
       if (index >= data.length) {
         clearInterval(timerInterval);
@@ -108,6 +135,7 @@ function showQuestion(index) {
 }
 function endQuiz() {
   mainContainer.style.display = "none";
+  score.innerHTML = `Your score: ${correctCount} / ${data.length}`;
   endContainer.style.display = "block";
 }
 restart.addEventListener("click", () => {
