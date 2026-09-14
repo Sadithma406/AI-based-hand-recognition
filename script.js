@@ -1,5 +1,5 @@
 import * as imports from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest";
-import data from "./data.json";
+
 
 const mainContainer = document.getElementById("main-container");
 const endContainer = document.getElementById("end-container");
@@ -27,6 +27,16 @@ let fingerCount = 0;
 let correctCount = 0;
 let handLandmarker;
 
+let data = [];
+async function getQuestions(){
+  try {
+    const response = await fetch("data.json").then(res => res.json());
+    data = response;
+    showQuestion(0);
+  } catch (error) {
+    console.error("Error fetching questions: ", error);
+  }
+}
 async function loadModel() {
   try {
     const vision = await imports.FilesetResolver.forVisionTasks(
@@ -143,5 +153,5 @@ restart.addEventListener("click", () => {
 })
 
 enableBtn.disabled = true;
-showQuestion(0);
+getQuestions();
 loadModel();  
