@@ -30,7 +30,7 @@ let handLandmarker;
 let data = [];
 async function getQuestions(){
   try {
-    const response = await fetch("data.json").then(res => res.json());
+    const response = await fetch("data.j  son").then(res => res.json());
     data = response;
     showQuestion(0);
   } catch (error) {
